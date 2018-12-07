@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t fabiendev/react_test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run fabiendev/react_test npm test -- --coverage
+
+after_success:
+  - docker build -t fabiendev/multi-client ./client
+  - docker build -t fabiendev/multi-nginx ./nginx
+  - docker build -t fabiendev/multi-server ./server
+  - docker build -t fabiendev/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to Docker Hub
+  - docker push fabiendev/multi-client
+  - docker push fabiendev/multi-nginx
+  - docker push fabiendev/multi-server
+  - docker push fabiendev/multi-worker
